@@ -2,7 +2,7 @@
   "name": "my-react-website",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://YOUR_GITHUB_USERNAME.github.io/my-react-website",
+  "homepage": "https://magnusnordin.github.io/speed",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
