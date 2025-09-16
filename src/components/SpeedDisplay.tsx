@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./SpeedDisplay.css";
 import { fetchSpeedLimit, SpeedLimitResult } from "../services/osm";
+import NoSleep from "nosleep.js";
 
 const SpeedDisplay: React.FC = () => {
   const [speed, setSpeed] = useState<number | null>(null);
@@ -8,23 +9,47 @@ const SpeedDisplay: React.FC = () => {
   const [permissionStatus, setPermissionStatus] = useState<string>("prompt");
   const [speedLimit, setSpeedLimit] = useState<number | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const noSleepRef = useRef<NoSleep | null>(null);
+  const noSleepEnabledRef = useRef<boolean>(false);
 
   useEffect(() => {
+    // iOS NoSleep fallback: enable on first user gesture
+    const ensureNoSleep = () => {
+      if (noSleepEnabledRef.current) return;
+      try {
+        if (!noSleepRef.current) {
+          noSleepRef.current = new NoSleep();
+        }
+        noSleepRef.current.enable();
+        noSleepEnabledRef.current = true;
+        window.removeEventListener("touchstart", ensureNoSleep, true);
+        window.removeEventListener("click", ensureNoSleep, true);
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    window.addEventListener("touchstart", ensureNoSleep, true);
+    window.addEventListener("click", ensureNoSleep, true);
+
     // Wake Lock setup
     let wakeLock: WakeLockSentinel | null = null;
 
     const requestWakeLock = async () => {
       try {
-        wakeLock = await navigator.wakeLock.request("screen");
-        console.log("Wake Lock is active");
-
-        document.addEventListener("visibilitychange", async () => {
-          if (document.visibilityState === "visible" && wakeLock === null) {
-            wakeLock = await navigator.wakeLock.request("screen");
-          }
-        });
+        // Not widely supported on iOS Safari; will no-op if missing
+        wakeLock = await (navigator as any)?.wakeLock?.request?.("screen");
+        if (wakeLock) {
+          document.addEventListener("visibilitychange", async () => {
+            if (document.visibilityState === "visible" && wakeLock === null) {
+              wakeLock = await (navigator as any)?.wakeLock?.request?.(
+                "screen"
+              );
+            }
+          });
+        }
       } catch (err) {
-        console.log("Wake Lock request failed:", err);
+        // If Wake Lock fails, NoSleep fallback remains
       }
     };
 
@@ -98,15 +123,22 @@ const SpeedDisplay: React.FC = () => {
         navigator.geolocation.clearWatch(watchId);
       }
       if (wakeLock) {
-        wakeLock.release().then(() => {
+        wakeLock.release?.().then?.(() => {
           wakeLock = null;
-          console.log("Wake Lock released");
         });
       }
       if (abortRef.current) {
         abortRef.current.abort();
         abortRef.current = null;
       }
+      try {
+        if (noSleepRef.current && noSleepEnabledRef.current) {
+          noSleepRef.current.disable();
+          noSleepEnabledRef.current = false;
+        }
+      } catch {}
+      window.removeEventListener("touchstart", ensureNoSleep, true);
+      window.removeEventListener("click", ensureNoSleep, true);
     };
   }, []);
 
