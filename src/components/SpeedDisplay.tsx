@@ -150,7 +150,7 @@ const SpeedDisplay: React.FC = () => {
         <span className="value">{Math.round(speed)}</span>
         <span className="unit">km/h</span>
         {speedLimit !== null && (
-          <div style={{ marginTop: "1rem", fontSize: "1.25rem", opacity: 0.9 }}>
+          <div className="speed-limit">
             Speed limit: <strong>{speedLimit}</strong> km/h
             {speedLimitSource ? ` (${speedLimitSource})` : ""}
           </div>
