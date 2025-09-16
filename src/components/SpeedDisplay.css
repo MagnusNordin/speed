@@ -46,3 +46,9 @@
   opacity: 0.8;
   text-align: center;
 }
+
+.speed-limit {
+  margin-top: 1rem;
+  font-size: 1.25rem;
+  opacity: 0.9;
+}
