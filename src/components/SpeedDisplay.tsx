@@ -7,7 +7,6 @@ const SpeedDisplay: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [permissionStatus, setPermissionStatus] = useState<string>("prompt");
   const [speedLimit, setSpeedLimit] = useState<number | null>(null);
-  const [speedLimitSource, setSpeedLimitSource] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -74,11 +73,9 @@ const SpeedDisplay: React.FC = () => {
           fetchSpeedLimit(latitude, longitude, controller.signal)
             .then((res: SpeedLimitResult) => {
               setSpeedLimit(res.speedLimitKph);
-              setSpeedLimitSource(res.source);
             })
             .catch(() => {
               setSpeedLimit(null);
-              setSpeedLimitSource(null);
             });
         },
         (err) => {
@@ -152,7 +149,6 @@ const SpeedDisplay: React.FC = () => {
         {speedLimit !== null && (
           <div className="speed-limit">
             Speed limit: <strong>{speedLimit}</strong> km/h
-            {speedLimitSource ? ` (${speedLimitSource})` : ""}
           </div>
         )}
       </div>
